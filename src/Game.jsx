@@ -13,8 +13,13 @@ export default function Game() {
       );
     })
     const [moves, setMoves] = useState(movesInit)
+    const [reversed, setReversed] = useState(false)
 
-    const newMoves = history.map((squares, move) => {
+    function handlePlay(nextSquares) {
+      const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+      setHistory(nextHistory);
+      setCurrentMove(nextHistory.length - 1);
+      const newMoves = nextHistory.map((squares, move) => {
         let description;
         if (move > 0) {
           description = 'Go to move #' + move;
@@ -23,15 +28,11 @@ export default function Game() {
         }
         return (
           <li key={move}>
-            {move === currentMove ? 'You are at move# ' + move : <button onClick={() => jumpTo(move)}>{description}</button>}
+            {move === currentMove + 1 ? 'You are at move# ' + move : <button onClick={() => jumpTo(move)}>{description}</button>}
           </li>
         );
       })
-
-    function handlePlay(nextSquares) {
-      const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
-      setHistory(nextHistory);
-      setCurrentMove(nextHistory.length - 1);
+      if (reversed===true) {newMoves.reverse()}
       setMoves(newMoves)
     }
   
@@ -40,8 +41,9 @@ export default function Game() {
     }
   
     function handleButtonClick() {
-      let newMoves = [...moves].reverse()
-      setMoves(newMoves)
+      setReversed(!reversed);
+      const newMoves=[...moves].reverse();
+      setMoves(newMoves);
     }
   
     return (
