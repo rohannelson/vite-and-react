@@ -28,7 +28,7 @@ export default function Game() {
         }
         return (
           <li key={move}>
-            {move === currentMove + 1 ? 'You are at move# ' + move : <button onClick={() => jumpTo(move)}>{description}</button>}
+            {move === nextHistory.length - 1 ? 'You are at move# ' + move : <button onClick={() => jumpTo(move)}>{description}</button>}
           </li>
         );
       })

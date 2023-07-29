@@ -1,6 +1,6 @@
 import Square from './Square';
-export default function Board({ xIsNext, squares, onPlay }) {
-    /*props from Game.jsx:
+export default function Board({ xIsNext, squares, onPlay}) {
+  /*props from Game.jsx:
 
     xIsNext = currentMove % 2 === 0;
     
@@ -12,7 +12,6 @@ export default function Board({ xIsNext, squares, onPlay }) {
         currently sets movesArray... not so sure about this.
     }
     */
-
     function handleClick(i) {
       if (calculateWinner(squares) || squares[i]) {
         return;
