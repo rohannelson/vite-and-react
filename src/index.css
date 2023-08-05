@@ -74,6 +74,9 @@ body {
   padding: 0;
   text-align: center;
   width: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .board-row:after {
@@ -143,4 +146,28 @@ body {
 .circle.blue {
   background: aqua;
   border: 2px solid black;
+}
+
+/*CHECKERS*/
+
+.blackChecker {
+  background-color: black;
+  border: 1px solid white;
+  height: 90%;
+  width: 90%;
+  border-radius: 100%;
+}
+.whiteChecker {
+  background-color: white;
+  border: 1px solid black;
+  height: 90%;
+  width: 90%;
+  border-radius: 100%;
+}
+.black {
+  background: gray;
+}
+.placeholder {
+  cursor: url(whiteChecker.svg), default;
+  cursor: url(blackChecker.svg), default;
 }
