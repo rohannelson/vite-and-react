@@ -171,3 +171,6 @@ body {
   cursor: url(whiteChecker.svg), default;
   cursor: url(blackChecker.svg), default;
 }
+.blackHeld {
+  cursor: url(blackChecker.svg), default;
+}
