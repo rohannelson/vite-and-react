@@ -157,12 +157,18 @@ body {
   width: 90%;
   border-radius: 100%;
 }
+.blackCheckerKing {
+  border: 3px solid gold;
+}
 .whiteChecker {
   background-color: white;
   border: 1px solid black;
   height: 90%;
   width: 90%;
   border-radius: 100%;
+}
+.whiteCheckerKing {
+  border: 3px solid gold;
 }
 .black {
   background: gray;

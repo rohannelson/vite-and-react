@@ -7,12 +7,12 @@ function CheckerSquare({className, value, onSquareClick}) {
     </button>)
 }
 
-function Black() {
-    return <div className="blackChecker"></div>
+function Black({king}) {
+    return <div className={`blackChecker ${king}`}></div>
 }
 
-function White() {
-    return <div className="whiteChecker"></div>
+function White({king}) {
+    return <div className={`whiteChecker ${king}`}></div>
 }
 
 function CheckerRow({iRow, squares, onSquareClick}) {
@@ -23,8 +23,10 @@ function CheckerRow({iRow, squares, onSquareClick}) {
         if (iSquare % 2 === offset) {classname="white"}
         let keyValue = iRow*8 + iSquare
         let valueValue;
-        if (squares[keyValue] === "black") {valueValue = <Black/>}
-        if (squares[keyValue] === "white") {valueValue = <White/>}
+        if (squares[keyValue] === "black") {valueValue = <Black king=""/>}
+        if (squares[keyValue] === "white") {valueValue = <White king=""/>}
+        if (squares[keyValue] === "blackKing") {valueValue = <Black king="blackCheckerKing"/>}
+        if (squares[keyValue] === "whiteKing") {valueValue = <White king="whiteCheckerKing"/>}
         return (<CheckerSquare className={classname} value={valueValue} key={keyValue} onSquareClick={() => onSquareClick(squares[keyValue], keyValue, offset)}/>)
 
 })
@@ -54,55 +56,91 @@ export default function Game() {
     function handleClick(value, index, offset) {
         let diagonalA;
         let diagonalB;
+        let reverseDiagonalA;
+        let reverseDiagonalB
         let longDiagonalA;
         let longDiagonalB;
-        if (value === notTurn) {
+        let reverseLongDiagonalA;
+        let reverseLongDiagonalB;
+        if (value?.includes(notTurn)) {
             return
         } //pickup piece 
-        else if (!held && value === turn) {
+        else if (!held && value?.includes(turn)) {
+            console.log(`pickup ${value}`)
             let nextSquares = [...squares]
             nextSquares[index] = null
             setSquares(nextSquares);
             setHeld({value, index, offset});
             return
         } else if (held && index === held.index) {
+            console.log(`return ${value}`)
             let nextSquares = [...squares]
             nextSquares[index] = held.value
             setSquares(nextSquares);
             setHeld(false);
         } else if (held) {
-            diagonalB = held.index + 9 * turnToken
             diagonalA = held.index + 7 * turnToken
+            diagonalB = held.index + 9 * turnToken
+            reverseDiagonalA = held.index + 7 * turnToken * -1
+            reverseDiagonalB = held.index + 9 * turnToken * -1
             longDiagonalA = held.index + 14 * turnToken
             longDiagonalB = held.index + 18 * turnToken
-        } 
+            reverseLongDiagonalA = held.index + 14 * turnToken * -1
+            reverseLongDiagonalB = held.index + 18 * turnToken * -1
+        }
+        function kingCheck() {
+            if (held.value === ("white") && index < 8 
+            || held.value === ("black") && index > 55) {
+                return `${held.value}King`} else {return held.value}
+        }
         //If it's a valid basic move
         if (
         held && value === null && index === diagonalA && held[2] !== offset && !offensive
-        || held && value === null && index === diagonalB && held[2] !== offset && !offensive) {
+        || held && value === null && index === diagonalB && held[2] !== offset && !offensive
+        || held.value?.includes("King") && value === null && index === reverseDiagonalA && held[2] !== offset && !offensive
+        || held.value?.includes("King") && value === null && index === reverseDiagonalB && held[2] !== offset && !offensive) {
+            console.log("basic move")
             let nextSquares = [...squares]
-            nextSquares[index] = held.value
+            nextSquares[index] = kingCheck()
             setSquares(nextSquares)
             setHeld(false)
             setBlacksTurn(!blacksTurn)
             return
-        } else if (value === null && index === (longDiagonalB) && squares[diagonalB] === notTurn && held.offset === offset
-            || value === null && index === (longDiagonalA) && squares[diagonalA] === notTurn && held.offset === offset) {
+        //if it's a valid offensive move
+        } else if (value === null && index === (longDiagonalB) && squares[diagonalB]?.includes(notTurn) && held.offset === offset
+            || value === null && index === (longDiagonalA) && squares[diagonalA]?.includes(notTurn) && held.offset === offset
+            || value === null && index === (reverseLongDiagonalB) && squares[reverseDiagonalB]?.includes(notTurn) && held.offset === offset
+            || value === null && index === (reverseLongDiagonalA) && squares[reverseDiagonalA]?.includes(notTurn) && held.offset === offset) {
                 console.log("offensive move")
                 let takenPiece;
-                index === longDiagonalB ? takenPiece = diagonalB : takenPiece = diagonalA
+                if (index === longDiagonalB) {
+                    takenPiece = diagonalB
+                } else if (index === longDiagonalA) {
+                    takenPiece = diagonalA
+                } else if (index === reverseLongDiagonalA) {
+                    takenPiece = reverseDiagonalA
+                } else if (index === reverseLongDiagonalB) {
+                    takenPiece = reverseDiagonalB
+                }
                 let nextSquares = [...squares]
-                nextSquares[index] = held.value
+                nextSquares[index] = kingCheck()
                 nextSquares[takenPiece] = null;
                 nextSquares[held.index] = null;
                 setSquares(nextSquares);
                 //setup to check for subsequent offensive moves
-                let newDiagonalB = index + 9 * turnToken
                 let newDiagonalA = index + 7 * turnToken
+                let newDiagonalB = index + 9 * turnToken
+                let newReverseDiagonalA = index + 7 * turnToken * -1
+                let newReverseDiagonalB = index + 9 * turnToken * -1
                 let newLongDiagonalA = index + 14 * turnToken
                 let newLongDiagonalB = index + 18 * turnToken
-                if (squares[newLongDiagonalA] === null && squares[newDiagonalA] === notTurn && held.offset === offset
-                || squares[newLongDiagonalB] === null && squares[newDiagonalB] === notTurn && held.offset === offset) {
+                let newReverseLongDiagonalA = index + 14 * turnToken * -1
+                let newReverseLongDiagonalB = index + 18 * turnToken * -1
+                if (squares[newLongDiagonalA] === null && squares[newDiagonalA]?.includes(notTurn) && held.offset === offset
+                || squares[newLongDiagonalB] === null && squares[newDiagonalB]?.includes(notTurn) && held.offset === offset
+                || held.value?.includes("King") && squares[newReverseLongDiagonalA] === null && squares[newReverseDiagonalA]?.includes(notTurn) && held.offset === offset
+                || held.value?.includes("King") && squares[newReverseLongDiagonalB] === null && squares[newReverseDiagonalB]?.includes(notTurn) && held.offset === offset) {
+                console.log("another offensive possible")
                 let newHeld = {...held}
                 newHeld.index=index
                 setHeld(newHeld);
@@ -110,10 +148,12 @@ export default function Game() {
                 console.log(held);
                 return
             } else {
+                console.log("offensive ended")
                 setOffensive(false)
                 setHeld(false)
                 setBlacksTurn(!blacksTurn)
             }
+            console.log(`clicked ${index}`)
         }
     }
 
