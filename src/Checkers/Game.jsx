@@ -25,7 +25,7 @@ function CheckerRow({iRow, squares, onSquareClick}) {
         let valueValue;
         if (squares[keyValue] === "black") {valueValue = <Black/>}
         if (squares[keyValue] === "white") {valueValue = <White/>}
-        return (<CheckerSquare className={classname} value={valueValue} key={keyValue} onSquareClick={() => onSquareClick(squares[keyValue], keyValue, iSquare, offset)}/>)
+        return (<CheckerSquare className={classname} value={valueValue} key={keyValue} onSquareClick={() => onSquareClick(squares[keyValue], keyValue, offset)}/>)
 
 })
     return (<div className="board-row">{checkerRow}</div>)
@@ -43,6 +43,7 @@ export default function Game() {
     const [squares, setSquares] = useState(initialSquares);
     const [held, setHeld] = useState(false);
     const [blacksTurn, setBlacksTurn] = useState(true);
+    const [offensive, setOffensive] = useState(false);
     let turn;
     blacksTurn ? turn = "black" : turn = "white";
     let notTurn;
@@ -50,8 +51,7 @@ export default function Game() {
     let turnToken;
     blacksTurn ? turnToken = 1 : turnToken = -1;
 
-    function handleClick(value, index, iSquare, offset) {
-        console.log(iSquare)
+    function handleClick(value, index, offset) {
         let diagonalA;
         let diagonalB;
         let longDiagonalA;
@@ -60,49 +60,69 @@ export default function Game() {
             return
         } //pickup piece 
         else if (!held && value === turn) {
-            console.log("Piece picked up (not held, value=true)")
             let nextSquares = [...squares]
             nextSquares[index] = null
             setSquares(nextSquares);
-            setHeld([value, index, offset]);
+            setHeld({value, index, offset});
             return
+        } else if (held && index === held.index) {
+            let nextSquares = [...squares]
+            nextSquares[index] = held.value
+            setSquares(nextSquares);
+            setHeld(false);
         } else if (held) {
-            diagonalA = held[1] + 7 * turnToken
-            diagonalB = held[1] + 9 * turnToken
-            longDiagonalA = held[1] + 14 * turnToken
-            longDiagonalB = held[1] + 18 * turnToken
+            diagonalB = held.index + 9 * turnToken
+            diagonalA = held.index + 7 * turnToken
+            longDiagonalA = held.index + 14 * turnToken
+            longDiagonalB = held.index + 18 * turnToken
         } 
         //If it's a valid basic move
         if (
-        held && value === null && index === diagonalA && held[2] !== offset 
-        || held && value === null && index === diagonalB && held[2] !== offset
-        ) {
-            console.log("Basic move played")
+        held && value === null && index === diagonalA && held[2] !== offset && !offensive
+        || held && value === null && index === diagonalB && held[2] !== offset && !offensive) {
             let nextSquares = [...squares]
-            nextSquares[index] = held[0]
+            nextSquares[index] = held.value
             setSquares(nextSquares)
             setHeld(false)
             setBlacksTurn(!blacksTurn)
             return
+        } else if (value === null && index === (longDiagonalB) && squares[diagonalB] === notTurn && held.offset === offset
+            || value === null && index === (longDiagonalA) && squares[diagonalA] === notTurn && held.offset === offset) {
+                console.log("offensive move")
+                let takenPiece;
+                index === longDiagonalB ? takenPiece = diagonalB : takenPiece = diagonalA
+                let nextSquares = [...squares]
+                nextSquares[index] = held.value
+                nextSquares[takenPiece] = null;
+                nextSquares[held.index] = null;
+                setSquares(nextSquares);
+                //setup to check for subsequent offensive moves
+                let newDiagonalB = index + 9 * turnToken
+                let newDiagonalA = index + 7 * turnToken
+                let newLongDiagonalA = index + 14 * turnToken
+                let newLongDiagonalB = index + 18 * turnToken
+                if (squares[newLongDiagonalA] === null && squares[newDiagonalA] === notTurn && held.offset === offset
+                || squares[newLongDiagonalB] === null && squares[newDiagonalB] === notTurn && held.offset === offset) {
+                let newHeld = {...held}
+                newHeld.index=index
+                setHeld(newHeld);
+                setOffensive(true)
+                console.log(held);
+                return
+            } else {
+                setOffensive(false)
+                setHeld(false)
+                setBlacksTurn(!blacksTurn)
+            }
         }
-        //If it's a valid offensive move
-        else if (value === null && index === (longDiagonalB) && squares[diagonalB] === notTurn && held[2] === offset
-        || value === null && index === (longDiagonalA) && squares[diagonalA] === notTurn && held[2] === offset) {
-            let takenPiece;
-            index === longDiagonalB ? takenPiece = diagonalB : takenPiece = diagonalA
-            console.log("Offensive move played")
-            let nextSquares = [...squares]
-            nextSquares[index] = held[0]
-            nextSquares[takenPiece] = null
-            setSquares(nextSquares)
-            setHeld(false)
-            setBlacksTurn(!blacksTurn)
-        }
+    }
+
         //NEED TO MAKE IT SO YOU CAN DO MULTIPLE OFFENSIVE MOVES.
+                //Could utilise index % 8 - for white longDiagonalA % 8 always needs to be < index % 8 and longDiagonalB needs to be > index % 8. Vice versa for black.
+                //May need to set state for an offensive move having been taken to check whether to switch to the next player's turn or not?
+                //Perhaps an offensive move needs to be it's own looping function? Yes - I think so.
         //NEED TO MAKE IT SO PIECES GET KINGED WHEN THEY REACH THE END.
-        console.log("clicked")
-        console.log(`${held} held`)
-    } 
+        //NEED TO INTRODUCE PROMPTS TO INDICATE IF COMPULSORY MOVES ARE POSSIBLE? 
 
 
     return (
