@@ -39,7 +39,7 @@ function CheckerBoard({squares, onSquareClick}) {
 }
 
 export default function Game() {
-    const initialSquares = Array(64).fill(null);
+    const initialSquares = Array(64).fill("");
     [1,3,5,7,8,10,12,14].forEach((i) => initialSquares[i] = "black");
     [49,51,53,55,56,58,60,62].forEach((i) => initialSquares[i] = "white");
     const [squares, setSquares] = useState(initialSquares);
@@ -62,20 +62,21 @@ export default function Game() {
         let longDiagonalB;
         let reverseLongDiagonalA;
         let reverseLongDiagonalB;
+        let offensivePossible;
         if (value?.includes(notTurn)) {
             return
         } //pickup piece 
         else if (!held && value?.includes(turn)) {
             console.log(`pickup ${value}`)
             let nextSquares = [...squares]
-            nextSquares[index] = null
+            nextSquares[index] = ""
             setSquares(nextSquares);
             setHeld({value, index, offset});
             return
         } else if (held && index === held.index) {
             console.log(`return ${value}`)
             let nextSquares = [...squares]
-            nextSquares[index] = held.value
+            nextSquares[index] = held?.value
             setSquares(nextSquares);
             setHeld(false);
         } else if (held) {
@@ -88,17 +89,27 @@ export default function Game() {
             reverseLongDiagonalA = held.index + 14 * turnToken * -1
             reverseLongDiagonalB = held.index + 18 * turnToken * -1
         }
+        function validate(num) {
+            if (num > 0 && num < 63) {return true} else {return false}
+        }
         function kingCheck() {
-            if (held.value === ("white") && index < 8 
-            || held.value === ("black") && index > 55) {
-                return `${held.value}King`} else {return held.value}
+            if (held?.value === ("white") && index < 8 
+            || held?.value === ("black") && index > 55) {
+                return `${held?.value}King`} else {return held?.value}
         }
         //If it's a valid basic move
-        if (
-        held && value === null && index === diagonalA && held[2] !== offset && !offensive
-        || held && value === null && index === diagonalB && held[2] !== offset && !offensive
-        || held.value?.includes("King") && value === null && index === reverseDiagonalA && held[2] !== offset && !offensive
-        || held.value?.includes("King") && value === null && index === reverseDiagonalB && held[2] !== offset && !offensive) {
+        //Trying to detect possible offensive moves.
+        if (squares[longDiagonalA] === "" && squares[diagonalA]?.includes(notTurn) && validate(longDiagonalA) && held.offset === offset
+            || squares[longDiagonalB] === "" && squares[diagonalB]?.includes(notTurn) && validate(longDiagonalB) && held.offset === offset
+            || held?.value?.includes("King") && squares[reverseLongDiagonalA] === "" && squares[reverseDiagonalA]?.includes(notTurn) && validate(reverseLongDiagonalA)
+                || held?.value?.includes("King") && squares[reverseLongDiagonalB] === "" && squares[reverseDiagonalB]?.includes(notTurn) && validate(reverseLongDiagonalB)) {
+                    offensivePossible = true;
+                    console.log("offensive possible")
+                }
+        if (held && value === "" && index === diagonalA && held[2] !== offset && !offensive && !offensivePossible
+        || held && value === "" && index === diagonalB && held[2] !== offset && !offensive && !offensivePossible
+        || held?.value?.includes("King") && value === "" && index === reverseDiagonalA && held[2] !== offset && !offensive && !offensivePossible
+        || held?.value?.includes("King") && value === "" && index === reverseDiagonalB && held[2] !== offset && !offensive && !offensivePossible) {
             console.log("basic move")
             let nextSquares = [...squares]
             nextSquares[index] = kingCheck()
@@ -107,10 +118,10 @@ export default function Game() {
             setBlacksTurn(!blacksTurn)
             return
         //if it's a valid offensive move
-        } else if (value === null && index === (longDiagonalB) && squares[diagonalB]?.includes(notTurn) && held.offset === offset
-            || value === null && index === (longDiagonalA) && squares[diagonalA]?.includes(notTurn) && held.offset === offset
-            || value === null && index === (reverseLongDiagonalB) && squares[reverseDiagonalB]?.includes(notTurn) && held.offset === offset
-            || value === null && index === (reverseLongDiagonalA) && squares[reverseDiagonalA]?.includes(notTurn) && held.offset === offset) {
+        } else if (value === "" && index === (longDiagonalB) && squares[diagonalB]?.includes(notTurn) && held.offset === offset
+            || value === "" && index === (longDiagonalA) && squares[diagonalA]?.includes(notTurn) && held.offset === offset
+            || value === "" && index === (reverseLongDiagonalB) && squares[reverseDiagonalB]?.includes(notTurn) && held.offset === offset
+            || value === "" && index === (reverseLongDiagonalA) && squares[reverseDiagonalA]?.includes(notTurn) && held.offset === offset) {
                 console.log("offensive move")
                 let takenPiece;
                 if (index === longDiagonalB) {
@@ -124,8 +135,8 @@ export default function Game() {
                 }
                 let nextSquares = [...squares]
                 nextSquares[index] = kingCheck()
-                nextSquares[takenPiece] = null;
-                nextSquares[held.index] = null;
+                nextSquares[takenPiece] = "";
+                nextSquares[held.index] = "";
                 setSquares(nextSquares);
                 //setup to check for subsequent offensive moves
                 let newDiagonalA = index + 7 * turnToken
@@ -136,16 +147,20 @@ export default function Game() {
                 let newLongDiagonalB = index + 18 * turnToken
                 let newReverseLongDiagonalA = index + 14 * turnToken * -1
                 let newReverseLongDiagonalB = index + 18 * turnToken * -1
-                if (squares[newLongDiagonalA] === null && squares[newDiagonalA]?.includes(notTurn) && held.offset === offset
-                || squares[newLongDiagonalB] === null && squares[newDiagonalB]?.includes(notTurn) && held.offset === offset
-                || held.value?.includes("King") && squares[newReverseLongDiagonalA] === null && squares[newReverseDiagonalA]?.includes(notTurn) && held.offset === offset
-                || held.value?.includes("King") && squares[newReverseLongDiagonalB] === null && squares[newReverseDiagonalB]?.includes(notTurn) && held.offset === offset) {
+                if (nextSquares[newLongDiagonalA] === "" && nextSquares[newDiagonalA]?.includes(notTurn) && held.offset === offset && validate(newLongDiagonalA)
+                || nextSquares[newLongDiagonalB] === "" && nextSquares[newDiagonalB]?.includes(notTurn) && held.offset === offset && validate(newLongDiagonalB)
+                || held?.value?.includes("King") && nextSquares[newReverseLongDiagonalA] === "" && nextSquares[newReverseDiagonalA]?.includes(notTurn) && held.offset === offset && validate(newReverseLongDiagonalA)
+                || held?.value?.includes("King") && nextSquares[newReverseLongDiagonalB] === "" && nextSquares[newReverseDiagonalB]?.includes(notTurn) && held.offset === offset && validate(newReverseLongDiagonalB)) {
                 console.log("another offensive possible")
                 let newHeld = {...held}
                 newHeld.index=index
                 setHeld(newHeld);
                 setOffensive(true)
-                console.log(held);
+                console.log(newHeld);
+                nextSquares[newLongDiagonalA] === "" && nextSquares[newDiagonalA]?.includes(notTurn) && held.offset === offset && validate(newLongDiagonalA) ? console.log(`NLDA true ${newLongDiagonalA}`) : console.log(`NLDA false`)
+                nextSquares[newLongDiagonalB] === "" && nextSquares[newDiagonalB]?.includes(notTurn) && held.offset === offset && validate(newLongDiagonalB) ? console.log("NLDB true") : console.log("NLDB false");
+                held?.value?.includes("King") && nextSquares[newReverseLongDiagonalA] === "" && nextSquares[newReverseDiagonalA]?.includes(notTurn) && held.offset === offset && validate(newReverseLongDiagonalA) ? console.log("NRLDA true") : console.log("NRLDA false");
+                held?.value?.includes("King") && nextSquares[newReverseLongDiagonalB] === "" && nextSquares[newReverseDiagonalB]?.includes(notTurn) && held.offset === offset && validate(newReverseLongDiagonalB) ? console.log("NRLDB true") : console.log("NRLDB false");
                 return
             } else {
                 console.log("offensive ended")
