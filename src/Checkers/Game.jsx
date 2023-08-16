@@ -62,6 +62,7 @@ export default function Game() {
         let longDiagonalB;
         let reverseLongDiagonalA;
         let reverseLongDiagonalB;
+        //checks for possible offensive moves
         function offensiveCheck() {
             let possibleOffensiveMoves = []
             squares.forEach((square, i) => {
@@ -74,25 +75,38 @@ export default function Game() {
                 let possibleLongDiagonalB = i + 18 * turnToken
                 let possibleReverseLongDiagonalA = i + 14 * turnToken * -1
                 let possibleReverseLongDiagonalB = i + 18 * turnToken * -1
-                if (squares[possibleLongDiagonalA] === "" && squares[possibleDiagonalA]?.includes(notTurn) /*&& held.offset === offset */&& validate(possibleLongDiagonalA)) {
+                function legitTest(suspect, moveType) {
+                    if (turn.includes("white") && moveType === "A" && suspect % 8 > i % 8
+                    || turn.includes("white") && moveType === "B" && suspect % 8 < i % 8
+                    || turn.includes("black") && moveType === "A" && suspect % 8 < i % 8
+                    || turn.includes("black") && moveType === "B" && suspect % 8 > i % 8) {
+                        console.log("legit")
+                        return true
+                } else {
+                    console.log("not legit")
+                    return false
+                }
+            }
+                if (squares[possibleLongDiagonalA] === "" && squares[possibleDiagonalA]?.includes(notTurn) && legitTest(possibleLongDiagonalA, "A") && validate(possibleLongDiagonalA)) {
                     console.log(`PLDA true ${i} to ${possibleLongDiagonalA}`);
                     possibleOffensiveMoves.push(i)
             }
-                if (squares[possibleLongDiagonalB] === "" && squares[possibleDiagonalB]?.includes(notTurn) /*&& held.offset === offset */&& validate(possibleLongDiagonalB)) {
+                if (squares[possibleLongDiagonalB] === "" && squares[possibleDiagonalB]?.includes(notTurn) && legitTest(possibleLongDiagonalB, "B") && validate(possibleLongDiagonalB)) {
                     console.log(`PLDB true ${i} to ${possibleLongDiagonalB}`)
                     possibleOffensiveMoves.push(i)
                 }
-                if (square?.includes("King") && squares[possibleReverseLongDiagonalA] === "" && squares[possibleReverseDiagonalA]?.includes(notTurn) /*&& held.offset === offset */&& validate(possibleReverseLongDiagonalA)) {
+                if (square?.includes("King") && squares[possibleReverseLongDiagonalA] === "" && squares[possibleReverseDiagonalA]?.includes(notTurn) && legitTest(possibleReverseLongDiagonalA, "B") && validate(possibleReverseLongDiagonalA)) {
                     console.log(`PRLDA true ${i} to ${possibleReverseDiagonalA}`)
                     possibleOffensiveMoves.push(i)
                 }
-                if (square?.includes("King") && squares[possibleReverseLongDiagonalB] === "" && squares[possibleReverseDiagonalB]?.includes(notTurn) /*&& held.offset === offset*/&& validate(possibleReverseLongDiagonalB)) {
+                if (square?.includes("King") && squares[possibleReverseLongDiagonalB] === "" && squares[possibleReverseDiagonalB]?.includes(notTurn) && legitTest(possibleReverseLongDiagonalB, "A") && validate(possibleReverseLongDiagonalB)) {
                     console.log(`PRLDB true ${i} to ${possibleReverseLongDiagonalB}`)
                     possibleOffensiveMoves.push(i)
                 }
                 }
             })
             console.log(possibleOffensiveMoves)
+            if (possibleOffensiveMoves[0]) {setOffensive(true)}
             return possibleOffensiveMoves;
         }
         offensiveCheck()[0] ? console.log("true") : console.log("false")
